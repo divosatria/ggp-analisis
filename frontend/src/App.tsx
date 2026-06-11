@@ -360,7 +360,7 @@ export default function App() {
             {/* Map */}
             <div className="w-full lg:flex-1 h-[350px] min-h-[350px] rounded-lg overflow-hidden border border-slate-200 relative z-0 shrink-0">
               <MapContainer 
-                center={(typeof currentData?.gps?.lat === 'number' && typeof currentData?.gps?.lon === 'number') ? [currentData.gps.lat, currentData.gps.lon] : [-4.827070372870977, 105.23176480198309]} 
+                center={(typeof currentData?.gps?.lat === 'number' && typeof currentData?.gps?.lon === 'number' && currentData.gps.lat !== 0) ? [currentData.gps.lat, currentData.gps.lon] : [-4.755477, 105.189018]} 
                 zoom={14} 
                 scrollWheelZoom={true} 
                 style={{ height: '100%', width: '100%' }}
