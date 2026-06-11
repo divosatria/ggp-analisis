@@ -9,7 +9,7 @@ services:
     ports:
       - "4001:4000"
     volumes:
-      - telemetry-db:/app/data
+      - ./backend/data:/app/data
     environment:
       - NODE_ENV=production
 
@@ -24,6 +24,3 @@ services:
       - "3001:80"
     depends_on:
       - telemetry-backend
-
-volumes:
-  telemetry-db:
