@@ -28,8 +28,11 @@ jobs:
             # Hentikan dan hapus container lama (seperti permintaan Anda)
             docker compose down
             
-            # Build dan jalankan ulang Docker container
-            docker compose up --build -d
+            # Build ulang tanpa cache agar perubahan UI pasti masuk
+            docker compose build --no-cache
+            
+            # Jalankan ulang Docker container
+            docker compose up -d
             
             # Bersihkan cache docker yang tidak terpakai agar server tidak penuh
             docker image prune -f

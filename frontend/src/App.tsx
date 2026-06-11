@@ -20,8 +20,10 @@ L.Marker.prototype.options.icon = bulldozerIcon;
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, map.getZoom());
-  }, [center, map]);
+    if (center[0] !== 0 && center[1] !== 0) {
+      map.setView(center, map.getZoom());
+    }
+  }, [center[0], center[1], map]);
   return null;
 }
 
