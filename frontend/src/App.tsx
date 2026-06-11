@@ -74,7 +74,7 @@ export default function App() {
   const handleExportCSV = () => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://103.217.145.187:4001';
     if (viewMode === 'history' && fromDate && toDate) {
-      window.open(`${backendUrl}/api/export?from=${fromDate}&to=${toDate}`, '_blank');
+      window.open(`${backendUrl}/api/export?from=${new Date(fromDate).toISOString()}&to=${new Date(toDate).toISOString()}`, '_blank');
     } else {
       window.open(`${backendUrl}/api/export`, '_blank');
     }
@@ -88,9 +88,9 @@ export default function App() {
     setIsLoadingHistory(true);
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://103.217.145.187:4001';
-      // Gunakan langsung value dari input (YYYY-MM-DDTHH:mm) karena DB menyimpan local time
-      const fromISO = fromDate;
-      const toISO = toDate;
+      // Kembalikan ke format ISO UTC karena live server ternyata menyimpannya dalam UTC
+      const fromISO = new Date(fromDate).toISOString();
+      const toISO = new Date(toDate).toISOString();
       const res = await fetch(`${backendUrl}/api/history/range?from=${fromISO}&to=${toISO}`);
       const result = await res.json();
       
