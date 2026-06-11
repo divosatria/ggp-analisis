@@ -17,8 +17,8 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Pindah ke folder proyek di server (Sesuaikan nama foldern Jika berbeda)
-            cd ~/GGP/Web_analisis || cd ~/GGP
+            # Pindah ke folder proyek di server
+            cd ~/GGP
             
             # Tarik kode terbaru dari GitHub
             git stash
