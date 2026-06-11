@@ -20,9 +20,10 @@ jobs:
             # Pindah ke folder proyek di server
             cd ~/GGP/ggp-analisis
             
-            # Tarik kode terbaru dari GitHub
-            git stash
-            git pull origin main
+            # Pastikan server benar-benar tersinkronisasi murni dengan GitHub
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
             
             # Hentikan dan hapus container lama (seperti permintaan Anda)
             docker compose down
