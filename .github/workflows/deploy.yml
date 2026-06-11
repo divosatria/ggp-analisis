@@ -23,9 +23,11 @@ jobs:
             # Pastikan server benar-benar tersinkronisasi murni dengan GitHub
             export GIT_TERMINAL_PROMPT=0
             git remote set-url origin https://github.com/divosatria/ggp-analisis.git
-            git fetch origin main || echo "Git fetch failed but continuing"
+            git fetch --all
             git reset --hard origin/main
             git clean -fd
+            echo "Git sync complete. Current commit:"
+            git log --oneline -1
             
             # Hentikan dan hapus container lama (seperti permintaan Anda)
             docker compose down
