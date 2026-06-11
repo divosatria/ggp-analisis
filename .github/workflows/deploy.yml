@@ -24,6 +24,9 @@ jobs:
             git stash
             git pull origin main
             
+            # Hentikan dan hapus container lama (seperti permintaan Anda)
+            docker compose down
+            
             # Build dan jalankan ulang Docker container
             docker compose up --build -d
             
