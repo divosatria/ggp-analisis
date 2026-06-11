@@ -21,7 +21,9 @@ jobs:
             cd ~/GGP/ggp-analisis
             
             # Pastikan server benar-benar tersinkronisasi murni dengan GitHub
-            git fetch origin main
+            export GIT_TERMINAL_PROMPT=0
+            git remote set-url origin https://github.com/divosatria/ggp-analisis.git
+            git fetch origin main || echo "Git fetch failed but continuing"
             git reset --hard origin/main
             git clean -fd
             
