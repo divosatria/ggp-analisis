@@ -9,13 +9,13 @@ import L from 'leaflet';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-const DefaultIcon = L.icon({
-  iconUrl,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+const bulldozerIcon = L.icon({
+  iconUrl: '/bulldozer.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  popupAnchor: [0, -20],
 });
-L.Marker.prototype.options.icon = DefaultIcon;
+L.Marker.prototype.options.icon = bulldozerIcon;
 
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -72,9 +72,9 @@ export default function App() {
   }, []);
 
   const handleExportCSV = () => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://103.217.145.187:4001';
     if (viewMode === 'history' && fromDate && toDate) {
-      window.open(`${backendUrl}/api/export?from=${new Date(fromDate).toISOString()}&to=${new Date(toDate).toISOString()}`, '_blank');
+      window.open(`${backendUrl}/api/export?from=${fromDate}&to=${toDate}`, '_blank');
     } else {
       window.open(`${backendUrl}/api/export`, '_blank');
     }
@@ -87,9 +87,10 @@ export default function App() {
     }
     setIsLoadingHistory(true);
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-      const fromISO = new Date(fromDate).toISOString();
-      const toISO = new Date(toDate).toISOString();
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://103.217.145.187:4001';
+      // Gunakan langsung value dari input (YYYY-MM-DDTHH:mm) karena DB menyimpan local time
+      const fromISO = fromDate;
+      const toISO = toDate;
       const res = await fetch(`${backendUrl}/api/history/range?from=${fromISO}&to=${toISO}`);
       const result = await res.json();
       
@@ -110,14 +111,15 @@ export default function App() {
         }));
         
         let finalData = mappedData;
-        if (mappedData.length > 1000) {
-          const step = Math.ceil(mappedData.length / 1000);
+        // Recharts sangat berat jika data di atas 500 titik
+        if (mappedData.length > 500) {
+          const step = Math.ceil(mappedData.length / 500);
           finalData = mappedData.filter((_: any, i: number) => i % step === 0);
         }
         
         setHistoryData(finalData);
 
-        if (result.data.length > 0) {
+        if (result.data && result.data.length > 0) {
           const lastRow = result.data[result.data.length - 1];
           setCurrentData({
             type: lastRow.type,
@@ -133,13 +135,18 @@ export default function App() {
             imu: { x: lastRow.imu_x, y: lastRow.imu_y, z: lastRow.imu_z }
           });
           
-          const path: [number, number][] = result.data
-            .filter((row: any) => row.lat && row.lon)
-            .map((row: any) => [row.lat, row.lon]);
+          let pathData = result.data.filter((row: any) => row.lat && row.lon);
+          // Batasi titik koordinat peta maksimal 2000 agar tidak lag
+          if (pathData.length > 2000) {
+            const step = Math.ceil(pathData.length / 2000);
+            pathData = pathData.filter((_: any, i: number) => i % step === 0);
+          }
+          const path: [number, number][] = pathData.map((row: any) => [row.lat, row.lon]);
           setHistoricalPath(path);
         } else {
           setHistoryData([]);
           setHistoricalPath([]);
+          setCurrentData(null);
           alert('Tidak ada data pada rentang tanggal tersebut');
         }
       }
@@ -196,42 +203,42 @@ export default function App() {
         });
       }
 
-      // Use a functional update to check activeDeviceId accurately from latest state
-      setActiveDeviceId(currentActive => {
-        if (currentActive && payload.deviceId && payload.deviceId !== currentActive) {
-          return currentActive; // Ignore data from other devices
-        }
-        
-        setCurrentData(payload);
-        
-        setHistoryData(prev => {
-        const timeUnix = payload.timestamp ? new Date(payload.timestamp).getTime() : Date.now();
-        const newDataPoint = {
-          time: timeUnix,
-          engine_temp: payload.engine?.suhu_mesin,
-          air_temp: payload.environment?.suhu_udara,
-          voltage: payload.power?.v,
-          power: payload.power?.p,
-          debit1: payload.flowmeter?.debit1,
-          debit2: payload.flowmeter?.debit2,
-          total1: payload.flowmeter?.total1,
-          total2: payload.flowmeter?.total2,
-          konsumsi: payload.flowmeter?.konsumsi,
-          fuel_level: payload.bbm?.tinggi_bbm,
-          fuel_pressure: payload.bbm?.tekanan_bbm
-        };
-        const updated = [...prev, newDataPoint];
-        if (updated.length > 60) {
-          return updated.slice(updated.length - 60);
-        }
-        return updated;
+        // Gunakan functional update agar kita selalu membandingkan dengan nilai device yang terbaru
+        setActiveDeviceId(currentActive => {
+          if (currentActive && payload.deviceId && payload.deviceId !== currentActive) {
+            return currentActive; // Ignore data from other devices
+          }
+          
+          setCurrentData(payload);
+          
+          setHistoryData(prev => {
+            const timeUnix = payload.timestamp ? new Date(payload.timestamp).getTime() : Date.now();
+            const newDataPoint = {
+              time: timeUnix,
+              engine_temp: payload.engine?.suhu_mesin,
+              air_temp: payload.environment?.suhu_udara,
+              voltage: payload.power?.v,
+              power: payload.power?.p,
+              debit1: payload.flowmeter?.debit1,
+              debit2: payload.flowmeter?.debit2,
+              total1: payload.flowmeter?.total1,
+              total2: payload.flowmeter?.total2,
+              konsumsi: payload.flowmeter?.konsumsi,
+              fuel_level: payload.bbm?.tinggi_bbm,
+              fuel_pressure: payload.bbm?.tekanan_bbm
+            };
+            const updated = [...prev, newDataPoint];
+            if (updated.length > 60) {
+              return updated.slice(updated.length - 60);
+            }
+            return updated;
+          });
+          
+          return currentActive || payload.deviceId;
         });
-        
-        return currentActive || payload.deviceId;
-        });
-        });
+    });
 
-        return () => {
+    return () => {
       socket.disconnect();
     };
   }, []);
@@ -353,17 +360,17 @@ export default function App() {
             {/* Map */}
             <div className="w-full lg:flex-1 h-[350px] min-h-[350px] rounded-lg overflow-hidden border border-slate-200 relative z-0 shrink-0">
               <MapContainer 
-                center={currentData?.gps ? [currentData.gps.lat, currentData.gps.lon] : [-4.827070372870977, 105.23176480198309]} 
+                center={(typeof currentData?.gps?.lat === 'number' && typeof currentData?.gps?.lon === 'number') ? [currentData.gps.lat, currentData.gps.lon] : [-4.827070372870977, 105.23176480198309]} 
                 zoom={14} 
                 scrollWheelZoom={true} 
                 style={{ height: '100%', width: '100%' }}
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                 />
-                {currentData?.gps && <MapUpdater center={[currentData.gps.lat, currentData.gps.lon]} />}
-                {currentData?.gps?.lat !== undefined && currentData?.gps?.lon !== undefined && (
+                {(typeof currentData?.gps?.lat === 'number' && typeof currentData?.gps?.lon === 'number') && <MapUpdater center={[currentData.gps.lat, currentData.gps.lon]} />}
+                {(typeof currentData?.gps?.lat === 'number' && typeof currentData?.gps?.lon === 'number') && (
                   <Marker position={[currentData.gps.lat, currentData.gps.lon]}>
                     <Popup>
                       <strong>Vessel Location</strong><br/>
@@ -374,10 +381,10 @@ export default function App() {
                   </Marker>
                 )}
                 {viewMode === 'history' && historicalPath.length > 0 && (
-                  <Polyline positions={historicalPath} color="#4f46e5" weight={4} opacity={0.7} />
+                  <Polyline positions={historicalPath} color="#4f46e5" weight={5} opacity={0.8} smoothFactor={1.5} lineCap="round" lineJoin="round" />
                 )}
                 {viewMode === 'realtime' && realtimePath.length > 1 && (
-                  <Polyline positions={realtimePath} color="#ef4444" weight={4} opacity={0.7} dashArray="5, 10" />
+                  <Polyline positions={realtimePath} color="#ef4444" weight={5} opacity={0.8} dashArray="5, 10" smoothFactor={1.5} lineCap="round" lineJoin="round" />
                 )}
               </MapContainer>
             </div>
@@ -466,8 +473,8 @@ export default function App() {
             <h2 className="text-lg font-semibold text-slate-800">Fuel Tank</h2>
           </div>
           <div className="flex flex-col gap-3 mt-2">
-            <MetricBox label="Fuel Level" value={currentData?.bbm?.tinggi_bbm} unit="%" />
-            <MetricBox label="Fuel Pressure" value={currentData?.bbm?.tekanan_bbm} unit="bar" />
+            <MetricBox label="Fuel Level" value={currentData?.bbm?.tinggi_bbm} unit="cm" />
+            <MetricBox label="Fuel Pressure" value={currentData?.bbm?.tekanan_bbm} unit="kPa" />
           </div>
         </div>
       </div>
@@ -487,7 +494,7 @@ export default function App() {
             <MetricBox label="Debit 2" value={currentData?.flowmeter?.debit2} unit="L/m" />
             <MetricBox label="Total 1" value={currentData?.flowmeter?.total1} unit="L" />
             <MetricBox label="Total 2" value={currentData?.flowmeter?.total2} unit="L" />
-            <MetricBox label="Consumption" value={currentData?.flowmeter?.konsumsi} unit="L/h" />
+            <MetricBox label="Consumption" value={currentData?.flowmeter?.konsumsi} unit="L" />
           </div>
         </div>
 
@@ -501,8 +508,8 @@ export default function App() {
           </div>
           <div className="flex flex-col gap-3 mt-2">
             <MetricBox label="Voltage" value={currentData?.power?.v} unit="V" />
-            <MetricBox label="Current" value={currentData?.power?.i} unit="A" />
-            <MetricBox label="Power" value={currentData?.power?.p} unit="W" />
+            <MetricBox label="Current" value={currentData?.power?.i} unit="mA" />
+            <MetricBox label="Power" value={currentData?.power?.p} unit="mW" />
           </div>
         </div>
 
