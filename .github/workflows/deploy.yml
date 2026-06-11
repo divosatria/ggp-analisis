@@ -18,7 +18,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Pindah ke folder proyek di server
-            cd ~/GGP
+            cd ~/GGP/ggp-analisis
             
             # Tarik kode terbaru dari GitHub
             git stash
