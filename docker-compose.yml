@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  telemetry-backend:
+    build: 
+      context: ./backend
+    container_name: telemetry_backend
+    restart: always
+    ports:
+      - "4001:4000"
+    volumes:
+      - telemetry-db:/app/data
+    environment:
+      - NODE_ENV=production
+
+  telemetry-frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_BACKEND_URL=http://103.217.145.187:4001
+    container_name: telemetry_frontend
+    restart: always
+    ports:
+      - "3001:80"
+    depends_on:
+      - telemetry-backend
+
+volumes:
+  telemetry-db:
