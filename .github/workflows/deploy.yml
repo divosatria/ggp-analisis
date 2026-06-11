@@ -3,7 +3,7 @@ name: Deploy to VPS HERA2026
 on:
   push:
     branches:
-      - main # Akan jalan otomatis setiap kali Anda push ke branch main
+      - main
 
 jobs:
   deploy:
