@@ -29,8 +29,9 @@ jobs:
             echo "Git sync complete. Current commit:"
             git log --oneline -1
             
-            # Hentikan dan hapus container lama (seperti permintaan Anda)
-            docker compose down
+            # Hentikan dan hapus container lama beserta orphan
+            docker compose down --remove-orphans || true
+            docker rm -f telemetry_backend telemetry_frontend telemetry_db 2>/dev/null || true
             
             # Build ulang tanpa cache agar perubahan UI pasti masuk
             docker compose build --no-cache
