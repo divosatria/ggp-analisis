@@ -1,0 +1,31 @@
+name: Deploy to VPS HERA2026
+
+on:
+  push:
+    branches:
+      - main # Akan jalan otomatis setiap kali Anda push ke branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy ke Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Pindah ke folder proyek di server (Sesuaikan nama foldern Jika berbeda)
+            cd ~/GGP/Web_analisis || cd ~/GGP
+            
+            # Tarik kode terbaru dari GitHub
+            git stash
+            git pull origin main
+            
+            # Build dan jalankan ulang Docker container
+            docker compose up --build -d
+            
+            # Bersihkan cache docker yang tidak terpakai agar server tidak penuh
+            docker image prune -f
