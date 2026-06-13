@@ -412,7 +412,7 @@ export default function App() {
                 <hr className="border-slate-200" />
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 text-sm">SOG</span>
-                  <span className="font-mono text-base font-semibold text-indigo-600">{currentData?.gps?.sog ?? '--'} kn</span>
+                  <span className="font-mono text-base font-semibold text-indigo-600">{currentData?.gps?.sog ?? '--'} km/h</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 text-sm">COG</span>
@@ -589,7 +589,7 @@ export default function App() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} stroke="#64748b" fontSize={12} tickMargin={10} minTickGap={30} tickFormatter={(val) => new Date(val).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})} />
                 <YAxis yAxisId="left" stroke="#10b981" fontSize={12} tickFormatter={(val) => `${val}%`} domain={[0, 100]} />
-                <YAxis yAxisId="right" orientation="right" stroke="#f97316" fontSize={12} tickFormatter={(val) => `${val}bar`} domain={['auto', 'auto']} />
+                <YAxis yAxisId="right" orientation="right" stroke="#f97316" fontSize={12} tickFormatter={(val) => `${val}kPa`} domain={['auto', 'auto']} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '8px', color: '#1e293b', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   itemStyle={{ fontSize: '13px' }}
