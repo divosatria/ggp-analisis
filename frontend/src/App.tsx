@@ -371,7 +371,8 @@ export default function App() {
                 <TileLayer
                   attribution='&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                   url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                  maxZoom={19}
+                  maxZoom={22}
+                  maxNativeZoom={18}
                 />
                 {(typeof currentData?.gps?.lat === 'number' && typeof currentData?.gps?.lon === 'number') && <MapUpdater center={[currentData.gps.lat, currentData.gps.lon]} />}
                 {(typeof currentData?.gps?.lat === 'number' && typeof currentData?.gps?.lon === 'number') && (
